@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eu te amo, meu bem. ❤️</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❤️</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: #1c2526;
+            color: #fff;
+            overflow-x: hidden;
+            line-height: 1.6;
+            position: relative;
+        }
+
+        /* Partículas */
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            background: #1c2526;
+        }
+
+        /* Tinder Intro */
+        .tinder-intro {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        /* Cortina branca */
+        .curtain {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            bottom: -100%;
+            left: 0;
+            z-index: 2; /* Acima das fotos, abaixo do Match */
+            animation: curtainRise 1s ease 2s forwards; /* Sobe após 2s */
+        }
+
+        .tinder-card {
+            position: absolute;
+            width: 300px;
+            height: 450px; /* Aumentado para melhor acomodar fotos verticais */
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            transition: background 0.5s ease 2s; /* Transição pro branco */
+        }
+
+        .tinder-card .image-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .tinder-card .image-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: inherit; /* Herda a imagem do elemento pai via JavaScript */
+            transform: scale(1.1); /* Zoom de 10% */
+            filter: blur(8px); /* Desfoque para a borda */
+            z-index: 1;
+            border-radius: 20px;
+        }
+
+        .tinder-card img {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Evita corte em fotos verticais */
+            z-index: 2; /* Imagem nítida acima do fundo desfocado */
+            border-radius: 20px;
+            opacity: 1;
+            transition: opacity 0.5s ease 2s; /* Fade out da imagem */
+        }
+
+        .tinder-card.you {
+            transform: translateX(-150px) rotate(-10deg);
+            animation: swipeYou 2s ease forwards; /* 2s pra se juntar */
+            z-index: 1; /* Fotos abaixo da cortina */
+        }
+
+        .tinder-card.her {
+            transform: translateX(150px) rotate(10deg);
+            animation: swipeHer 2s ease forwards; /* 2s pra se juntar */
+            z-index: 1; /* Fotos abaixo da cortina */
+        }
+
+        .match-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5em;
+            font-weight: 900;
+            color: #ff4d6d;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(255, 77, 109, 0.8);
+            opacity: 0;
+            animation: matchPulse 1.5s ease 3s forwards; /* Reduzido de 1s pra 1,5s total com pulsação */
+            z-index: 3; /* Acima da cortina */
+        }
+
+        /* Ícone do Tinder */
+        .tinder-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            background: url('https://static-00.iconduck.com/assets.00/tinder-icon-438x512-hhug9iq5.png') no-repeat center/contain;
+            opacity: 0;
+            animation: iconAppear 0.5s ease 4.5s forwards, iconToss 1.2s ease-out 5.5s forwards; /* Ajustado */
+            transform-origin: center;
+            z-index: 4; /* Acima de tudo */
+        }
+
+        /* Emoji de Silêncio */
+        .silence-emoji {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5em;
+            opacity: 0;
+            animation: emojiAppear 0.5s ease 6.5s forwards, emojiFade 1s ease 7.5s forwards; /* Ajustado */
+            z-index: 5; /* Acima de tudo */
+        }
+
+        /* Animações */
+        @keyframes swipeYou {
+            0% { transform: translateX(-150px) rotate(-10deg); }
+            100% { transform: translateX(0) rotate(0deg); } /* Se juntam no centro */
+        }
+
+        @keyframes swipeHer {
+            0% { transform: translateX(150px) rotate(10deg); }
+            100% { transform: translateX(0) rotate(0deg); } /* Se juntam no centro */
+        }
+
+        @keyframes curtainRise {
+            0% { bottom: -100%; }
+            100% { bottom: 0; } /* Sobe até cobrir tudo */
+        }
+
+        @keyframes matchPulse {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            40% { transform: translate(-50%, -50%) scale(1.1); }
+            60% { transform: translate(-50%, -50%) scale(1); }
+            80% { transform: translate(-50%, -50%) scale(1.1); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); } /* Fica visível até o ícone */
+        }
+
+        @keyframes iconAppear {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes iconToss {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1) rotate(0deg);
+                filter: blur(0px);
+            }
+            20% {
+                opacity: 1;
+                transform: translate(-50%, -200px) scale(1.1) rotate(15deg);
+                filter: blur(5px);
+            }
+            50% {
+                opacity: 0.8;
+                transform: translate(-50%, -600px) scale(0.9) rotate(30deg);
+                filter: blur(10px);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -1200px) scale(0.5) rotate(45deg);
+                filter: blur(2px);
+            }
+        }
+
+        @keyframes emojiAppear {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        @keyframes emojiFade {
+            0% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* Esconder intro após animação */
+        .tinder-intro.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease 8.5s; /* Ajustado pra 8.5s */
+        }
+
+        /* Conteúdo principal */
+        .main-content {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .main-content.visible {
+            opacity: 1;
+        }
+
+        .header {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px;
+            background: #2d3839;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 5em;
+            color: #ff4d6d;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            animation: fadeIn 1.5s ease;
+        }
+
+        .header p {
+            font-size: 1.8em;
+            color: #e0e7e9;
+            margin-top: 20px;
+            max-width: 700px;
+        }
+
+        .section {
+            padding: 100px 40px;
+            position: relative;
+        }
+
+        .section h2 {
+            font-size: 3em;
+            color: #ff4d6d;
+            text-align: center;
+            margin-bottom: 60px;
+            text-transform: uppercase;
+        }
+
+        .counters {
+            display: flex;
+            justify-content: center;
+            gap: 80px;
+            flex-wrap: wrap;
+            margin: 60px 0;
+        }
+
+        .counter-box {
+            background: #2d3839;
+            padding: 40px;
+            border-radius: 15px;
+            min-width: 300px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .counter-box:hover {
+            transform: translateY(-10px);
+            background: #3b4b4c;
+        }
+
+        .counter-box h3 {
+            font-size: 1.8em;
+            color: #e0e7e9;
+        }
+
+        .counter-box span {
+            font-size: 2.5em;
+            color: #ff4d6d;
+            font-weight: bold;
+        }
+
+        .photo-story {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            max-width: 1200px;
+            margin: 60px auto;
+            padding: 20px;
+            flex-wrap: wrap;
+            opacity: 0;
+            transform: translateX(-50px);
+            transition: all 0.8s ease;
+        }
+
+        .photo-story.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .photo-story.reverse {
+            flex-direction: row-reverse;
+            transform: translateX(50px);
+        }
+
+        .photo-story.reverse.visible {
+            transform: translateX(0);
+        }
+
+        .photo-story .image-container {
+            position: relative;
+            width: 400px;
+            height: 500px; /* Aumentado para acomodar fotos verticais */
+        }
+
+        .photo-story .image-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: inherit; /* Herda a imagem do elemento pai via JavaScript */
+            transform: scale(1.1); /* Zoom de 10% */
+            filter: blur(8px); /* Desfoque para a borda */
+            z-index: 1;
+            border-radius: 15px;
+        }
+
+        .photo-story img {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Evita corte */
+            z-index: 2; /* Imagem nítida acima do fundo desfocado */
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .photo-story img:hover {
+            transform: scale(1.05);
+        }
+
+        .photo-story .text {
+            max-width: 600px;
+        }
+
+        .photo-story h3 {
+            font-size: 2em;
+            color: #ff4d6d;
+            margin-bottom: 10px;
+        }
+
+        .photo-story p {
+            font-size: 1.2em;
+            color: #e0e7e9;
+        }
+
+        .message {
+            text-align: center;
+            padding: 80px;
+            background: #2d3839;
+            border-radius: 20px;
+            margin: 80px auto;
+            max-width: 1000px;
+            font-size: 1.8em;
+            color: #e0e7e9;
+            animation: fadeIn 2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Tinder Intro -->
+    <div class="tinder-intro">
+        <div class="tinder-card you">
+            <div class="image-container">
+                <img src="https://i.imgur.com/yS8ZFOp.jpeg" alt="Sua Foto">
+            </div>
+        </div>
+        <div class="tinder-card her">
+            <div class="image-container">
+                <img src="https://i.imgur.com/Kxy9xL5.jpeg" alt="Foto Dela">
+            </div>
+        </div>
+        <div class="curtain"></div>
+        <div class="match-overlay">Match!</div>
+        <div class="tinder-icon"></div>
+        <div class="silence-emoji">🤫</div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-content">
+        <div id="particles-js"></div>
+        <section class="header">
+            <h1>Eu te amo, meu bem</h1>
+            <p>Desde 2021, vivendo os melhores momentos da minha vida contigo.</p>
+        </section>
+
+        <section class="section">
+            <h2>Nosso Tempo</h2>
+            <div class="counters">
+                <div class="counter-box">
+                    <h3>Juntos desde</h3>
+                    <span id="timeMet"></span>
+                </div>
+                <div class="counter-box">
+                    <h3>Namorando há</h3>
+                    <span id="timeDating"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Nossas Histórias</h2>
+            <div class="photo-story">
+                <div class="image-container">
+                    <img src="https://i.imgur.com/ZpHUVZi.jpeg" alt="Foto 1">
+                </div>
+                <div class="text">
+                    <h3>Primeiro Encontro</h3>
+                    <p>Desde que te conheci, ainda no exército, custei a acreditar que você era real. Minha fake (rs). E por mais que nosso encontro não tenha sido o mais clássico (obrigado, Tinder), gosto de pensar que o que nos uniu não foi um app que hoje em dia você não gosta de falar (rs²), e sim Deus — o app foi só a ferramenta dele. Ainda lembro da gente no Iguatemi, sentado do lado de fora, eu tentando de beijar e você se afastando, tímida, por medo de achar que eu não fosse gostar do seu beijo.</p>
+                </div>
+            </div>
+            <div class="photo-story reverse">
+                <div class="image-container">
+                    <img src="https://i.imgur.com/m6lvcv0.jpeg" alt="Foto 2">
+                </div>
+                <div class="text">
+                    <h3>Nossos Momentos</h3>
+                    <p>Muito obrigado por todos os momentos que passamos. Já vivemos muita coisa juntos, e você esteve do meu lado em todas as pequenas conquistas que tive até agora. Eu amo muito passar meus dias com você, mesmo você sendo meu estresse diário às vezes.</p>
+                </div>
+            </div>
+            <div class="photo-story">
+                <div class="image-container">
+                    <img src="https://i.imgur.com/eSUOerG.jpeg" alt="Foto 3">
+                </div>
+                <div class="text">
+                    <h3>Viagens e Paz</h3>
+                    <p>Obrigado por cada viagem, cada final de semana fora da rotina. No começo, confesso que foi estranho você me arrastar pro meio do mato sem sinal de internet. Mas aprendi que isso te fazia bem — e hoje em dia, também me faz. Amo quando fugimos da correria do dia a dia só pra ficar em paz.</p>
+                </div>
+            </div>
+            <div class="photo-story reverse">
+                <div class="image-container">
+                    <img src="https://i.imgur.com/LS12DUP.jpeg" alt="Foto 4">
+                </div>
+                <div class="text">
+                    <h3>Nossos Privilégios</h3>
+                    <p>Ainda não temos nossa casa, mas sou grato por tudo que nós já temos: empregos, carros (meio carro no meu caso), rolês pra comer fora, viagens e, o mais importante, saúde. Muitos casais sonham com o que a gente já tem.</p>
+                </div>
+            </div>
+            <div class="photo-story">
+                <div class="image-container">
+                    <img src="https://i.imgur.com/uiFTTtU.jpeg" alt="Foto 5">
+                </div>
+                <div class="text">
+                    <h3>Carinho e Presentes</h3>
+                    <p>Infelizmente, ainda não consigo te dar os presentes que você merece, como girassóis, perfumes caros e uma HR-V invocadona. Mas você dizia que fazia tempo que eu não fazia algo bonitinho ou carinhoso… e bom, tô tentando ser mais carinhoso ultimamente e mudar a forma como a gente se conecta.</p>
+                </div>
+            </div>
+            <div class="photo-story reverse">
+                <div class="image-container">
+                    <img src="https://i.imgur.com/LIwgomc.jpeg" alt="Foto 6">
+                </div>
+                <div class="text">
+                    <h3>Nosso Futuro</h3>
+                    <p>Não vejo a hora de a gente ter nossa própria casa, conquistar nossas coisas, tirar nossa sonequinha juntos, sair pra passear a hora que quiser, ter nossos cachorros e viver em paz em uma casa bonita, com dois carrões na garagem.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="message">
+                Obrigado por tudo, meu amor.
+Tenho certeza de que, se Deus nos desse a chance de viver mais de uma vida aqui na Terra, mesmo com todas as brigas e os dias difíceis, nós acabaríamos nos encontrando e escolhendo um ao outro de novo — sempre.
+Porque eu sei, do fundo do coração, que quando pedi a Ele a parceira da minha vida, Ele me ouviu.
+Eu te amo. Pra sempre. ❤️
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        // Carregar fonte
+        const fonts = document.createElement('link');
+        fonts.href = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap';
+        fonts.rel = 'stylesheet';
+        document.head.appendChild(fonts);
+
+        // Partículas
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 100, density: { enable: true, value_area: 800 } },
+                color: { value: '#ff4d6d' },
+                shape: { type: 'heart', stroke: { width: 0 } },
+                opacity: { value: 0.6, random: true },
+                size: { value: 5, random: true },
+                move: { enable: true, speed: 2, direction: 'none', random: true }
+            },
+            interactivity: {
+                detect_on: 'canvas',
+                events: { onhover: { enable: true, mode: 'bubble' } }
+            }
+        });
+
+        // Tinder Intro Logic
+        const tinderIntro = document.querySelector('.tinder-intro');
+        const mainContent = document.querySelector('.main-content');
+        const cards = document.querySelectorAll('.tinder-card');
+        const cardImages = document.querySelectorAll('.tinder-card img');
+
+        // Aplicar imagem de fundo desfocada
+        document.querySelectorAll('.image-container').forEach(container => {
+            const img = container.querySelector('img');
+            if (img) {
+                container.style.background = `url(${img.src}) no-repeat center`;
+                container.style.backgroundSize = 'cover';
+            }
+        });
+
+        setTimeout(() => {
+            cards.forEach(card => card.style.background = '#fff'); // Retângulo branco
+            cardImages.forEach(img => img.style.opacity = '0'); // Fade out das imagens
+        }, 2000); // Após a junção em 2s
+
+        setTimeout(() => {
+            tinderIntro.classList.add('hidden');
+            mainContent.classList.add('visible');
+        }, 2500); // 8.5s pra dar tempo à sequência
+
+        // Calcular diferença de tempo
+        function calculateTimeDifference(startDate) {
+            const now = new Date();
+            const start = new Date(startDate);
+            const diffMs = now - start;
+
+            const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            const years = Math.floor(days / 365);
+            const months = Math.floor((days % 365) / 30);
+            const remainingDays = days - (years * 365) - (months * 30);
+
+            return { years, months, days: remainingDays };
+        }
+
+        // Datas
+        const metDate = "2021-03-26";
+        const datingDate = "2021-04-25";
+
+        // Exibir contadores
+        const timeMet = calculateTimeDifference(metDate);
+        const timeDating = calculateTimeDifference(datingDate);
+
+        document.getElementById("timeMet").textContent = 
+            `${timeMet.years} anos, ${timeMet.months} meses, ${timeMet.days} dias`;
+        document.getElementById("timeDating").textContent = 
+            `${timeDating.years} anos, ${timeDating.months} meses, ${timeDating.days} dias`;
+
+        // Animação ao rolar
+        function revealStories() {
+            const stories = document.querySelectorAll('.photo-story');
+            stories.forEach(story => {
+                const rect = story.getBoundingClientRect();
+                if (rect.top <= window.innerHeight - 100) {
+                    story.classList.add('visible');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', revealStories);
+        window.addEventListener('load', revealStories);
+    </script>
+</body>
+</html>
